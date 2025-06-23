@@ -2,7 +2,7 @@ import User from "../models/User.js";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
+import { upsertStreamUser } from "../config/stream.js";
 
 const login = async (req, res) => {
   try {
@@ -101,6 +101,21 @@ const signup = async (req, res) => {
     if (!process.env.JWT_SECRET_KEY) {
       throw new Error("JWT_SECRET_KEY not defined in .env");
     }
+    
+    
+    try {
+    
+         await upsertStreamUser(
+            {
+                id:newUser._id.toString(),
+                name: newUser.fullName,
+                image:newUser.profilePic || ""
+            }
+        )
+        console.log(`stream user created for the user ${newUser._id}`)
+     } catch (error) {
+        console.log("error at creating stream user ")
+     }
 
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "7d",
