@@ -1,14 +1,85 @@
-import express from 'express'
+import User from "../models/User.js";
+import validator from "validator";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
-const login =async(req,res)=>{
-    res.send("login")
-}
+const login = async (req, res) => {
+  res.send("login");
+};
 
-const signup=async(req,res)=>{
-    res.send("register")
-}
+const signup = async (req, res) => {
+  try {
+    const { fullName, email, password } = req.body;
 
-const logout=async(req,res)=>{
     
-}
-export  { login,signup,logout};
+    if (!fullName || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all the details",
+      });
+    }
+
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      });
+    }
+
+    
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
+
+   
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+   
+    const newUser = new User({ fullName, email, password: hashedPassword });
+    await newUser.save();
+
+  
+    if (!process.env.JWT_SECRET_KEY) {
+      throw new Error("JWT_SECRET_KEY not defined in .env");
+    }
+
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, {
+      expiresIn: "7d",
+    });
+
+   
+    res.cookie("jwt", token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    res.status(201).json({ success: true, token });
+  } catch (error) {
+    console.error("Signup error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const logout = async (req, res) => {
+  res.clearCookie("jwt");
+  res.json({ success: true, message: "Logged out successfully" });
+};
+
+export { login, signup, logout };
