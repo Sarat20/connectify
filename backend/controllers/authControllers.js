@@ -144,4 +144,65 @@ const logout = async (req, res) => {
   res.json({ success: true, message: "Logged out successfully" });
 };
 
-export { login, signup, logout };
+const onboard = async (req, res) => {
+  console.log(req.user);
+  try {
+    const userId = req.user._id;
+    const { fullName, bio, nativeLanguage, learningLanguage, location } = req.body;
+
+    if (!fullName || !bio || !nativeLanguage || !learningLanguage || !location) {
+      return res.status(400).json({
+        message: "All fields are required",
+        missingFields: [
+          !fullName && "fullName",
+          !bio && "bio",
+          !nativeLanguage && "nativeLanguage",
+          !learningLanguage && "learningLanguage",
+          !location && "location"
+        ].filter(Boolean),
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        ...req.body,
+        isOnboarded: true,
+      },
+      { new: true } // To return updated user
+    );
+
+
+    try {
+    
+         await upsertStreamUser(
+            {
+                id:updatedUser._id.toString(),
+                name: updatedUser.fullName,
+                image:updatedUser.profilePic || ""
+            }
+        )
+        console.log(`stream user created for the user ${updatedUser._id}`)
+     } catch (error) {
+        console.log("error at creating stream user ")
+     }
+
+
+
+    return res.status(200).json({
+      success: true,
+      message: "User onboarded successfully",
+      user: updatedUser,
+    });
+
+  } catch (error) {
+    console.error("Onboarding error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+export { login, signup, logout,onboard};
