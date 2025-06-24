@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-
+import FriendRequest from "../models/FriendRequest.js";
 const getRecommendedUsers = async (req, res) => {
   try {
     const currentUserId = req.user.id;
@@ -32,4 +32,7 @@ const getMyFriends=async(req,res)=>{
     }
 
 }
+
+
+
 export {getRecommendedUsers,getMyFriends};
