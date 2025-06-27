@@ -22,7 +22,7 @@ const Register = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries(['authUser']);
-      navigate('/');
+      navigate('/onboarding');
     },
     onError: (err) => {
       const msg = err?.response?.data?.message || 'Registration failed';

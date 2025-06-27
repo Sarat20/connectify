@@ -39,7 +39,7 @@ const App = () => {
   return (
     <div>
       <Routes>
-        <Route path="/" element={authUser ? <Home /> : <Navigate to="/login" />} />
+        <Route path="/" element={authUser ? (authUser.isOnboarded ? <Home /> : <Navigate to="/onboarding" />) : <Navigate to="/login" />} />
         <Route path="/signup" element={!authUser ? <Register /> : <Navigate to="/" />} />
         <Route path="/login" element={!authUser ? <Login /> : <Navigate to="/" />} />
         <Route path="/notification" element={authUser ? <Notification /> : <Navigate to="/login" />} />
