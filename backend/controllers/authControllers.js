@@ -140,9 +140,15 @@ const signup = async (req, res) => {
 };
 
 const logout = async (req, res) => {
-  res.clearCookie("jwt");
-  res.json({ success: true, message: "Logged out successfully" });
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production", // or false for localhost
+  });
+
+  return res.json({ success: true, message: "Logged out successfully" });
 };
+
 
 const onboard = async (req, res) => {
   console.log(req.user);
